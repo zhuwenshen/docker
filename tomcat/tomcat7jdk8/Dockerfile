@@ -1,7 +1,7 @@
 FROM centos:7
 MAINTAINER zhuwenshen<1204621904@qq.com>
 # Default to UTF-8 file.encoding
-ENV LANG C.UTF-8
+ENV LANG zh_CN.UTF-8
 #修改时区
 RUN ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
 RUN echo 'Asia/Shanghai' >/etc/timezone
