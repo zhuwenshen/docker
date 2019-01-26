@@ -1,47 +1,32 @@
+#jdk8tomcat7.0.55
 FROM centos:7
+#作者
 MAINTAINER zhuwenshen<1204621904@qq.com>
-# Default to UTF-8 file.encoding
-#设置系统编码
-RUN yum install kde-l10n-Chinese -y
-RUN yum install glibc-common -y
-RUN localedef -c -f UTF-8 -i zh_CN zh_CN.utf8
-#RUN export LANG=zh_CN.UTF-8
-#RUN echo "export LANG=zh_CN.UTF-8" >> /etc/locale.conf
-#ENV LANG zh_CN.UTF-8
-ENV LC_ALL zh_CN.UTF-8
-#ENV LANG zh_CN.UTF-8
-#修改时区
-RUN ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
-RUN echo 'Asia/Shanghai' >/etc/timezone
-#定义变量
-#jdk-8u191-linux-x64.tar.gz
-ENV JDKNAME jdk1.8.0_191
-ENV TOMCAT_NAME tomcat
+#设置编码
+ENV LANG en_US.UTF-8
+#设置时区
+RUN cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime \
+	&&  echo "Asia/Shanghai" > /etc/timezone; 
 
+ENV JDKNAME=jdk1.8.0_201
+ENV TOMCAT_NAME tomcat
+ADD jdk-8u201-linux-x64.tar.gz /usr/lib
 ADD apache-tomcat-7.0.55.tar.gz /
 RUN mv /apache-tomcat-7.0.55 /tomcat
 
-
-#复制内容
-ADD jdk-8u191-linux-x64.tar.gz /usr/lib
-
-#设置环境变量
-#ENV JAVA_VERSION 1.8.0_191
 ENV JAVA_HOME /usr/lib/$JDKNAME
 ENV CATALINA_HOME /tomcat
 ENV PATH $PATH:$JAVA_HOME/bin:$CATALINA_HOME/bin
-
 #落脚点
 WORKDIR /tomcat
 #暴露到主机上
 #VOLUME ["/tomcat"]
-
 #开启内部服务端口
 EXPOSE 8080
-
 #启动tomcat服务器
 CMD /tomcat/bin/startup.sh && tail -f /tomcat/logs/catalina.out 
 
+#bulid
+#docker build -t tomact:7 .
 #启动命令
-#docker run -d --name tomcat7 -p 8080:8080 -v /dockerdata/tomcat7/logs:/tomcat/logs tomact:7
-
+#docker run -d --name tomcat7 -p 8080:8080 -v /dockerdata/tomcat7/logs:/tomcat/logs -v /dockerdata/tomcat7/webapps:/tomcat/webapps -v /dockerdata/tomcat7/home:/tomcat/home tomact:7
