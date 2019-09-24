@@ -38,6 +38,6 @@ CMD sh /entrypoint.sh
 #build
 #docker build -t jupyter:1.1 .
 #run
-#docker run --name jupyter -p 6006:6006 -v /home/docketdata/jupyter/data:/app/data -e PASSWD='123'  registry.cn-hangzhou.aliyuncs.com/zhuwenshen/jupyter:1.1
-#docker run --name jupyter -p 6006:6006 -v /home/docketdata/jupyter/data:/app/data  jupyter:1.1
+#docker run --name jupyter -p 6006:6006 -v /home/dockerdata/jupyter/data:/app/data -e PASSWD='123'  registry.cn-hangzhou.aliyuncs.com/zhuwenshen/jupyter:1.1
+#docker run --name jupyter -p 6006:6006 -v /home/dockerdata/jupyter/data:/app/data  jupyter:1.1
 #docker run --rm --name jupyter -p 6006:6006 jupyter:1.1

@@ -1,5 +1,5 @@
 #!/bin/bash
-if [ $PASSWD != '' && ! -f "/init_pws.txt" ]; then	
+if [ $PASSWD != '' -a ! -f "/init_pws.txt" ]; then	
 	touch "/init_pws.txt"
 	PASSWD=$(python -c 'from notebook.auth import passwd;import os; print(passwd(os.popen("echo -n $PASSWD").read()));')
 	echo "c.NotebookApp.password=u'${PASSWD}'" > ~/.jupyter/jupyter_notebook_config.py
