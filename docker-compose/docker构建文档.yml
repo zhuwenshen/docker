@@ -10,10 +10,13 @@ services:
       environment:
         TZ: 'Asia/Shanghai'
         GITLAB_OMNIBUS_CONFIG: |
-          external_url 'http://192.168.100.15'
+          external_url 'http://192.168.100.15:81'
+          gitlab_rails['gitlab_shell_ssh_port']=2222
+          #unicorn['port']=81
+          nginx['listen_port']=81
       ports:
-        - '81:80'
-        - '8443:443'
+        - '81:81'
+        - '443:443'
         - '2222:22'
       volumes:
         - /home/dockerdata/gitlab/config:/etc/gitlab
@@ -90,4 +93,6 @@ services:
         max-file: "10"
         
 ---
+
+
 
