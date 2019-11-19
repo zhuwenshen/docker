@@ -22,4 +22,4 @@ CMD java -Dserver.port=${SERVER_PORT} -Dcsp.sentinel.dashboard.server=${DASHBOAR
 #bulid
 #docker build -t registry.cn-hangzhou.aliyuncs.com/zhuwenshen/sentinel:1.1.6.3 .
 #启动命令
-#docker run --rm --name sentinel -p 8080:8080 -e JAVA_OPTS="-Xms4g -Xmx4g" -e auth_enabled=false  registry.cn-hangzhou.aliyuncs.com/zhuwenshen/sentinel:1.1.6.3
+#docker run --rm --name sentinel -p 8080:8080 -e JAVA_OPTS="-Xms4g -Xmx4g" -e SENTINEL_DASHBOARD_AUTH_USERNAME=abc -e SENTINEL_DASHBOARD_AUTH_PASSWORD=abc registry.cn-hangzhou.aliyuncs.com/zhuwenshen/sentinel:1.1.6.3
