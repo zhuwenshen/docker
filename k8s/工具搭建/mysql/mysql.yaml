@@ -1,0 +1,66 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mysql-pvc
+  namespace: default
+  labels:
+    app: mysql-pvc
+spec:
+  accessModes:
+  - ReadWriteMany
+  resources:
+    requests:
+      storage: 20Gi
+  storageClassName: nfs-249 
+  
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mysql-deploy
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: mysql-pod
+  template:
+    metadata:
+      labels: 
+        name: mysql-pod
+    spec:
+      containers:
+        - name: mysql
+          image: mysql:8.0.12
+          imagePullPolicy: IfNotPresent
+          env:
+          - name: MYSQL_ROOT_PASSWORD
+            value: noc-mysql
+          ports:
+            - containerPort: 3306
+          volumeMounts:
+            - name: mysql-persistent-storage
+              mountPath: "/var/lib/mysql"
+      volumes:
+        - name: mysql-persistent-storage
+          persistentVolumeClaim:
+            claimName: mysql-pvc
+            
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql-svc
+  namespace: default
+  labels: 
+    name: mysql-svc
+spec:
+  type: NodePort
+  ports:
+  - port: 3306
+    protocol: TCP
+    targetPort: 3306
+    name: http
+    nodePort: 32306
+  selector:
+    name: mysql-pod
