@@ -1,0 +1,23 @@
+# mkdir -p jenkins_home
+# chown -R 1000:1000 ./jenkins_home
+version: '3.7'
+services:
+  jenkins:
+    image: jenkins/jenkins:lts-centos
+    container_name: jenkins
+    restart: always
+    ports:
+      - 83:8080
+      - 50000:50000
+    environment:
+      TZ: "Asia/Shanghai"
+    volumes:
+      - ./jenkins_home:/var/jenkins_home
+      - ./jenkins.war:/usr/share/jenkins/jenkins.war
+      - /var/run/docker.sock:/var/run/docker.sock 
+      - /usr/bin/docker:/usr/bin/docker
+      
+#更新jenkins版本 docker cp jenkins.war jenkins:/usr/share/jenkins/
+# jenkins 增加docker build
+# 宿主机增加权限 查到id为1000的用户，vi /etc/group，增加docker组的用户 docker:x:982:pc023
+# 容器中 vi /etc/group ，增加 docker:x:982:jenkins

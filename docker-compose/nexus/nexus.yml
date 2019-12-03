@@ -1,0 +1,23 @@
+# nexus maven私服
+# mkdir -p /home/dockerdata/nexus
+version: '3.7'
+services: 
+  nexus:     
+    image: sonatype/nexus3
+    restart: unless-stopped
+    container_name: nexus
+    environment:
+        TZ: 'Asia/Shanghai'
+    ports:
+      - 82:8081
+      - 5000:5000 # docker仓库
+      - 5001:5001 # docker仓库
+    volumes:
+      - ./nexus-data:/nexus-data
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "1M"
+        max-file: "10"      
+# http://ip:82/ 初始账号为admin
+#chmod 777 /home/dockerdata/nexus/nexus-data

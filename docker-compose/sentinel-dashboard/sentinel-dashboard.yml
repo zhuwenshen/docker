@@ -1,0 +1,13 @@
+version: '3.7'
+services:
+  sentinel-dashboard:
+    image: registry.cn-hangzhou.aliyuncs.com/zhuwenshen/sentinel:1.1.6.3
+    container_name: sentinel-dashboard
+    restart: always
+    ports:
+      - 8085:8085
+    environment:
+      SERVER_PORT: 8085
+      DASHBOARD_SERVER: 192.168.100.15:8085
+      AUTH_ENABLED: 0
+
