@@ -1,0 +1,160 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: jenkins-pvc
+  namespace: kube-jenkins
+  labels:
+    app: jenkins-pvc
+spec:
+  accessModes:
+  - ReadWriteMany
+  resources:
+    requests:
+      storage: 100Gi
+  storageClassName: nfs-249
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+ name: jenkins
+ namespace: kube-jenkins
+---
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1beta1
+metadata:
+ name: jenkins
+ namespace: kube-jenkins
+rules:
+ - apiGroups: [""]
+   resources: ["pods"]
+   verbs: ["create","delete","get","list","patch","update","watch"]
+ - apiGroups: [""]
+   resources: ["pods/exec"]
+   verbs: ["create","delete","get","list","patch","update","watch"]
+ - apiGroups: [""]
+   resources: ["pods/log"]
+   verbs: ["get","list","watch"]
+ - apiGroups: [""]
+   resources: ["secrets"]
+   verbs: ["get"]
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: RoleBinding
+metadata:
+ name: jenkins
+ namespace: kube-jenkins
+roleRef:
+ apiGroup: rbac.authorization.k8s.io
+ kind: Role
+ name: jenkins
+subjects:
+ - kind: ServiceAccount
+   name: jenkins
+   namespace: kube-jenkins
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+ name: jenkins
+ namespace: kube-jenkins
+spec:
+ replicas: 1
+ selector:
+    matchLabels:
+      app: jenkins
+ template:
+   metadata:
+     labels:
+       app: jenkins
+   spec:
+     serviceAccount: jenkins
+     terminationGracePeriodSeconds: 10
+     containers: 
+     - name: jenkins
+       image: jenkins/jenkins:lts
+       imagePullPolicy: IfNotPresent
+       ports:
+       - containerPort: 8080
+         name: web
+         protocol: TCP
+       - containerPort: 50000
+         name: agent
+         protocol: TCP
+       resources:
+         limits:
+           cpu: 1000m
+           memory: 5Gi
+         requests:
+           cpu: 500m
+           memory: 512Mi
+       # lifecycle:
+         # postStart:
+           # exec:
+             # command: ["/bin/bash", "-c", "cp -rf  /tmp/update/jenkins.war /usr/share/jenkins/jenkins.war"]
+       livenessProbe:
+         httpGet:
+           path: /login
+           port: 8080
+         initialDelaySeconds: 60
+         timeoutSeconds: 5
+         failureThreshold: 12
+       readinessProbe:
+         httpGet:
+           path: /login
+           port: 8080
+         initialDelaySeconds: 60
+         timeoutSeconds: 5
+         failureThreshold: 12
+       volumeMounts:
+       - name: jenkinshome
+         subPath: jenkins
+         mountPath: /var/jenkins_home
+       - name: jenkins-war
+         mountPath: /usr/share/jenkins/
+       env:
+       - name: TZ
+         value: "Asia/Shanghai"
+       - name: LIMITS_MEMORY
+         valueFrom:
+           resourceFieldRef:
+             resource: limits.memory
+             divisor: 1Mi
+       - name: JAVA_OPTS
+         value: -Xmx$(LIMITS_MEMORY)m -XshowSettings:vm -Dhudson.slaves.NodeProvisioner.initialDelay=0 -Dhudson.slaves.NodeProvisioner.MARGIN=50 -Dhudson.slaves.NodeProvisioner.MARGIN0=0.85 -Duser.timezone=Asia/Shanghai
+     securityContext:
+       fsGroup: 1000
+     initContainers:
+       - name: init-update
+         image: jenkins/jenkins:lts
+         command: ["/bin/bash"]
+         args: ["-c", 'cp -rf /usr/share/jenkins/* /tmp/update/ && rm -rf /tmp/update/jenkins.war && wget -O /tmp/update/jenkins.war http://192.168.0.249:18084/file/jenkins.war && chmod 755 /tmp/update/jenkins.war && ls -l /tmp/update']
+         #command: ['cp -rf /usr/share/jenkins/ /tmp/update/','&&','wget', '-O', '/tmp/update/jenkins.war','http://192.168.0.249:18084/file/jenkins.war']
+         volumeMounts:
+         - name: jenkins-war
+           mountPath: /tmp/update/
+     volumes:
+     - name: jenkinshome
+       persistentVolumeClaim:
+         claimName: jenkins-pvc
+     - name: jenkins-war
+       emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+ name: jenkins
+ namespace: kube-jenkins
+ labels:
+   app: jenkins
+spec:
+ selector:
+   app: jenkins
+ type: NodePort
+ ports:
+ - name: web
+   port: 8080
+   targetPort: web
+   nodePort: 18083
+ - name: agent
+   port: 50000
+   targetPort: agent

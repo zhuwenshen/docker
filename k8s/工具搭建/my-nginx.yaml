@@ -1,0 +1,62 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: my-nginx-pvc
+  namespace: default
+  labels:
+    app: my-nginx-pvc
+spec:
+  accessModes:
+  - ReadWriteMany
+  resources:
+    requests:
+      storage: 100Gi
+  storageClassName: nfs-249-retain 
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-nginx
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: my-nginx
+  template:
+    metadata:
+      labels: 
+        app: my-nginx
+    spec:
+      containers:
+        - name: my-nginx
+          image: nginx:1.17.6
+          imagePullPolicy: IfNotPresent          
+          ports:
+            - containerPort: 80
+              name: web
+          volumeMounts:
+            # 以数据卷的形式挂载 MySQL 配置文件目录
+            - name: my-nginx-persistent-storage
+              mountPath: "/usr/share/nginx/html/file/"
+      volumes:
+        - name: my-nginx-persistent-storage
+          persistentVolumeClaim:
+            claimName: my-nginx-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+ name: my-nginx-svc
+ namespace: default
+ labels:
+   app: my-nginx-svc
+spec:
+ selector:
+   app: my-nginx
+ type: NodePort
+ ports:
+ - name: web
+   port: 80
+   targetPort: web
+   nodePort: 18084

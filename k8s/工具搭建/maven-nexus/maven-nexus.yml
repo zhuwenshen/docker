@@ -1,0 +1,82 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: maven-nexus-pvc
+  namespace: default
+  labels:
+    app: maven-nexus-pvc
+spec:
+  accessModes:
+  - ReadWriteMany
+  resources:
+    requests:
+      storage: 100Gi
+  storageClassName: nfs-249-retain 
+  
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: maven-nexus
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: maven-nexus
+  template:
+    metadata:
+      labels: 
+        name: maven-nexus
+    spec:
+      containers:
+        - name: maven-nexus
+          image: sonatype/nexus3
+          imagePullPolicy: IfNotPresent
+          env:
+          - name: TZ
+            value: 'Asia/Shanghai'
+          ports:
+            - containerPort: 8081
+              name: http
+            - containerPort: 5000
+              name: docker-http
+            - containerPort: 5001
+              name: docker-https
+          volumeMounts:
+            # 以数据卷的形式挂载 MySQL 配置文件目录
+            - name: maven-nexus-persistent-storage
+              mountPath: "/nexus-data"
+      volumes:
+        - name: maven-nexus-persistent-storage
+          persistentVolumeClaim:
+            claimName: maven-nexus-pvc       
+            
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: maven-nexus-svc
+  namespace: default
+  labels: 
+    name: maven-nexus-svc
+spec:
+  type: NodePort
+  ports:
+  - name: http
+    port: 8081
+    protocol: TCP
+    targetPort: 8081
+    nodePort: 18081
+  - name: docker-http
+    protocol: TCP
+    port: 5000
+    targetPort: 5000
+    nodePort: 5000
+  - name: docker-https
+    protocol: TCP
+    port: 5001
+    targetPort: 5001
+    nodePort: 5001
+  selector:
+    name: maven-nexus

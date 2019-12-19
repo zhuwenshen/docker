@@ -1,0 +1,37 @@
+# 准备本地卷
+#wget https://raw.githubusercontent.com/pingcap/tidb-operator/master/manifests/local-dind/local-volume-provisioner.yaml
+helm inspect values pingcap/tidb-operator --version=v1.0.4 > /root/tidb/values-tidb-operator.yaml
+helm inspect values pingcap/tidb-cluster --version=v1.0.4 > /root/tidb/values-tidb-cluster.yaml
+
+# 将local-volume-provisioner.yaml的local-storage分开成文件local-storage.yaml
+#kubectl apply -f local-storage.yaml
+#kubectl apply -f local-volume-provisioner.yaml
+# 不再使用上面的本地卷
+
+# 安装资源
+kubectl apply -f https://raw.githubusercontent.com/pingcap/tidb-operator/master/manifests/crd.yaml && \
+kubectl get crd tidbclusters.pingcap.com
+
+# 安装 TiDB Operator
+helm install pingcap/tidb-operator --name=tidb-operator --namespace=tidb-admin --version=v1.0.4 -f /root/tidb/values-tidb-operator.yaml
+kubectl get po -n tidb-admin -l app.kubernetes.io/name=tidb-operator
+
+# 安装 tidb-cluster
+helm install pingcap/tidb-cluster --name=tidb-cluster --namespace=tidb --version=v1.0.4 -f /root/tidb/values-tidb-cluster.yaml
+
+# 卸载
+# helm delete tidb-cluster --purge
+# 卸载
+# helm delete tidb-operator --purge
+
+
+kubectl edit clusterrole tidb-operator:tidb-scheduler
+
+- apiGroups:
+  - storage.k8s.io
+  resources:
+  - csinodes
+  verbs:
+  - get
+  - list
+  - watch

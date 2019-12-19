@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sentinel-dashboard
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: sentinel-dashboard
+  template:
+    metadata:
+      labels: 
+        name: sentinel-dashboard
+    spec:
+      containers:
+        - name: sentinel-dashboard
+          image: registry.cn-hangzhou.aliyuncs.com/zhuwenshen/sentinel:1.1.6.3
+          imagePullPolicy: IfNotPresent
+          env:
+              - name: SERVER_PORT
+                value: "18085"
+              - name: DASHBOARD_SERVER
+                value: "127.0.0.1:18085"
+              - name: AUTH_ENABLED
+                value: "0"
+          ports:
+            - containerPort: 8085
+              name: http
+            
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sentinel-dashboard-svc
+  namespace: default
+  labels: 
+    name: sentinel-dashboard-svc
+spec:
+  type: NodePort
+  ports:
+  - name: http
+    port: 18085
+    protocol: TCP
+    targetPort: 18085
+    nodePort: 18085 
+  selector:
+    name: sentinel-dashboard
+
