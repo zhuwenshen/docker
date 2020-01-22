@@ -1,0 +1,20 @@
+# mkdir data && chmod 777 data
+# docker-compose -f oracle-12c.yml up
+version: '3.7'
+services:
+  oracle-12c:
+    restart: always
+    container_name: myoracle        # 指定容器的名称
+    image:  registry.cn-hangzhou.aliyuncs.com/zhuwenshen/oracledatabase:12.2                   # 指定镜像和版本
+    ports:
+      - "1521:1521"
+    environment:
+      ORACLE_SID: 'orcl'    # 数据库名称
+      ORACLE_PWD: 'orcale'         # 数据密码 登录名 system as sysdba
+    volumes:
+      - "./data:/u01/app/oracle/oradata"           # 挂载数据目录
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100M"
+        max-file: "2"
